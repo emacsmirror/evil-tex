@@ -810,13 +810,7 @@ Don't modify this directly; use `evil-tex-user-delim-map-generator-alist'")
   "Your alist for modifications of `evil-tex-delim-map'.
 See `evil-tex-user-env-map-generator-alist' for format specification.")
 
-(defvar evil-tex-mode-map
-  (let ((keymap (make-sparse-keymap)))
-    (evil-define-key* '(motion normal) keymap
-      "[[" #'evil-tex-go-back-section
-      "]]" #'evil-tex-go-forward-section)
-    keymap)
-  "Keymap for `evil-tex-mode'.")
+
 
 (defvar evil-tex-env-map
   (evil-tex--populate-surround-kemap
@@ -861,33 +855,6 @@ See `evil-tex-user-env-map-generator-alist' for format specification.")
   (push
    '(("\\`." . "evil-tex-.*:\\(.*\\)") . (nil . "\\1"))
    which-key-replacement-alist))
-
-(define-key evil-inner-text-objects-map "e" 'evil-tex-inner-env)
-(define-key evil-inner-text-objects-map "$" 'evil-tex-inner-dollar)
-(define-key evil-inner-text-objects-map "c" 'evil-tex-inner-command)
-(define-key evil-inner-text-objects-map "m" 'evil-tex-inner-math)
-(define-key evil-inner-text-objects-map "d" 'evil-tex-inner-delim)
-(define-key evil-inner-text-objects-map "S" 'evil-tex-inner-section)
-(define-key evil-inner-text-objects-map "^" 'evil-tex-inner-superscript)
-(define-key evil-inner-text-objects-map "_" 'evil-tex-inner-subscript)
-
-(define-key evil-outer-text-objects-map "e" 'evil-tex-an-env)
-(define-key evil-outer-text-objects-map "$" 'evil-tex-a-dollar)
-(define-key evil-outer-text-objects-map "c" 'evil-tex-a-command)
-(define-key evil-outer-text-objects-map "m" 'evil-tex-a-math)
-(define-key evil-outer-text-objects-map "d" 'evil-tex-a-delim)
-(define-key evil-outer-text-objects-map "S" 'evil-tex-a-section)
-(define-key evil-outer-text-objects-map "^" 'evil-tex-a-superscript)
-(define-key evil-outer-text-objects-map "_" 'evil-tex-a-subscript)
-
-
-;; (evil-define-key 'operator evil-tex-mode-map
-;;   "a" evil-tex-outer-map
-;;   "i" evil-tex-inner-map)
-
-;; (evil-define-key 'visual evil-tex-mode-map
-;;   "a" evil-tex-outer-map
-;;   "i" evil-tex-inner-map)
 
 (defun evil-tex-surround-command-prompt ()
   "Ask the user for the command they'd like to surround with."
@@ -966,15 +933,76 @@ until one of them returns non-nil.")
   (save-excursion
     (evil-tex-read-with-keymap evil-tex-toggle-delimiter-map)))
 
-(when evil-tex-toggle-override-t
-  (evil-define-key 'normal evil-tex-mode-map "t"
-    (evil-tex-dispatch-single-key ?s #'evil-tex-read-and-execute-toggle
-                                  'evil-tex-t-functions)))
 
-(when evil-tex-toggle-override-m
-  (evil-define-key 'normal evil-tex-mode-map "m"
-    (evil-tex-dispatch-single-key ?t #'evil-tex-read-and-execute-toggle
-                                  'evil-tex-m-functions)))
+
+(defvar evil-tex-inner-text-objects-map
+  (let ((keymap (make-sparse-keymap)))
+    (set-keymap-parent keymap evil-inner-text-objects-map)
+    (define-key keymap "e" 'evil-tex-inner-env)
+    (define-key keymap "$" 'evil-tex-inner-dollar)
+    (define-key keymap "c" 'evil-tex-inner-command)
+    (define-key keymap "m" 'evil-tex-inner-math)
+    (define-key keymap "d" 'evil-tex-inner-delim)
+    (define-key keymap "S" 'evil-tex-inner-section)
+    (define-key keymap "^" 'evil-tex-inner-superscript)
+    (define-key keymap "_" 'evil-tex-inner-subscript)
+    keymap)
+  "Keymap for inner text objects defined by `evil-tex'.")
+
+(defun evil-tex-set-keymap-for-inner-surround-a (orig-fn &rest args)
+  "Advice for running surround in a modified env for `evil-tex-inner-text-objects-map'."
+  (let ((evil-outer-text-objects-map
+         (if evil-tex-mode
+             evil-tex-inner-text-objects-map
+           evil-outer-text-objects-map)))
+    (message "inner")
+    (apply orig-fn args)))
+
+(advice-add #'evil-surround-inner-overlay :around #'evil-tex-set-keymap-for-inner-surround-a)
+
+(defvar evil-tex-outer-text-objects-map
+  (let ((keymap (make-sparse-keymap)))
+    (set-keymap-parent keymap evil-outer-text-objects-map)
+    (define-key keymap "e" 'evil-tex-an-env)
+    (define-key keymap "$" 'evil-tex-a-dollar)
+    (define-key keymap "c" 'evil-tex-a-command)
+    (define-key keymap "m" 'evil-tex-a-math)
+    (define-key keymap "d" 'evil-tex-a-delim)
+    (define-key keymap "S" 'evil-tex-a-section)
+    (define-key keymap "^" 'evil-tex-a-superscript)
+    (define-key keymap "_" 'evil-tex-a-subscript)
+    keymap)
+  "Keymap for outer text objects defined by `evil-tex'.")
+
+(defun evil-tex-set-keymap-for-outer-surround-a (orig-fn &rest args)
+  "Advice for running surround in a modified env for `evil-tex-outer-text-objects-map'."
+  (let ((evil-outer-text-objects-map
+         (if evil-tex-mode
+             evil-tex-outer-text-objects-map
+           evil-outer-text-objects-map)))
+    (message "outer")
+    (apply orig-fn args)))
+
+(advice-add #'evil-surround-outer-overlay :around #'evil-tex-set-keymap-for-outer-surround-a)
+
+(defvar evil-tex-mode-map
+  (let ((keymap (make-sparse-keymap)))
+    (evil-define-key* 'motion keymap
+      "[[" #'evil-tex-go-back-section
+      "]]" #'evil-tex-go-forward-section)
+    (when evil-tex-toggle-override-t
+      (evil-define-key* 'normal keymap "t"
+        (evil-tex-dispatch-single-key ?s #'evil-tex-read-and-execute-toggle
+                                      'evil-tex-t-functions)))
+    (when evil-tex-toggle-override-m
+      (evil-define-key* 'normal keymap "m"
+        (evil-tex-dispatch-single-key ?t #'evil-tex-read-and-execute-toggle
+                                      'evil-tex-m-functions)))
+    (evil-define-key* '(visual operator) keymap
+      "i" evil-tex-inner-text-objects-map
+      "a" evil-tex-outer-text-objects-map)
+    keymap)
+  "Keymap for `evil-tex-mode'.")
 
 ;;;###autoload
 (define-minor-mode evil-tex-mode
