@@ -831,24 +831,6 @@ See `evil-tex-user-env-map-generator-alist' for format specification.")
    '(("\\`." . "evil-tex-.*:\\(.*\\)") . (nil . "\\1"))
    which-key-replacement-alist))
 
-(define-key evil-inner-text-objects-map "e" 'evil-tex-inner-env)
-(define-key evil-inner-text-objects-map "$" 'evil-tex-inner-dollar)
-(define-key evil-inner-text-objects-map "c" 'evil-tex-inner-command)
-(define-key evil-inner-text-objects-map "m" 'evil-tex-inner-math)
-(define-key evil-inner-text-objects-map "d" 'evil-tex-inner-delim)
-(define-key evil-inner-text-objects-map "S" 'evil-tex-inner-section)
-(define-key evil-inner-text-objects-map "^" 'evil-tex-inner-superscript)
-(define-key evil-inner-text-objects-map "_" 'evil-tex-inner-subscript)
-
-(define-key evil-outer-text-objects-map "e" 'evil-tex-an-env)
-(define-key evil-outer-text-objects-map "$" 'evil-tex-a-dollar)
-(define-key evil-outer-text-objects-map "c" 'evil-tex-a-command)
-(define-key evil-outer-text-objects-map "m" 'evil-tex-a-math)
-(define-key evil-outer-text-objects-map "d" 'evil-tex-a-delim)
-(define-key evil-outer-text-objects-map "S" 'evil-tex-a-section)
-(define-key evil-outer-text-objects-map "^" 'evil-tex-a-superscript)
-(define-key evil-outer-text-objects-map "_" 'evil-tex-a-subscript)
-
 (defvar evil-tex-surround-delimiters
   `((?m "\\(" . "\\)")
     (?M "\\[" . "\\]")
@@ -975,6 +957,27 @@ the default provided doggle functionality is as follows:
   :keymap evil-tex-mode-map
   (when evil-tex-mode
     (evil-normalize-keymaps)
+
+    (make-local-variable 'evil-inner-text-objects-map)
+    (define-key evil-inner-text-objects-map "e" 'evil-tex-inner-env)
+    (define-key evil-inner-text-objects-map "$" 'evil-tex-inner-dollar)
+    (define-key evil-inner-text-objects-map "c" 'evil-tex-inner-command)
+    (define-key evil-inner-text-objects-map "m" 'evil-tex-inner-math)
+    (define-key evil-inner-text-objects-map "d" 'evil-tex-inner-delim)
+    (define-key evil-inner-text-objects-map "S" 'evil-tex-inner-section)
+    (define-key evil-inner-text-objects-map "^" 'evil-tex-inner-superscript)
+    (define-key evil-inner-text-objects-map "_" 'evil-tex-inner-subscript)
+
+    (make-local-variable 'evil-outer-text-objects-map)
+    (define-key evil-outer-text-objects-map "e" 'evil-tex-an-env)
+    (define-key evil-outer-text-objects-map "$" 'evil-tex-a-dollar)
+    (define-key evil-outer-text-objects-map "c" 'evil-tex-a-command)
+    (define-key evil-outer-text-objects-map "m" 'evil-tex-a-math)
+    (define-key evil-outer-text-objects-map "d" 'evil-tex-a-delim)
+    (define-key evil-outer-text-objects-map "S" 'evil-tex-a-section)
+    (define-key evil-outer-text-objects-map "^" 'evil-tex-a-superscript)
+    (define-key evil-outer-text-objects-map "_" 'evil-tex-a-subscript)
+
     ;; (set-keymap-parent evil-tex-outer-map evil-outer-text-objects-map)
     ;; (set-keymap-parent evil-tex-inner-map evil-inner-text-objects-map)
     (eval-after-load 'evil-surround
